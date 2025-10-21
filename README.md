@@ -20,5 +20,5 @@
 * Summary paper (In Engligh)
 * Account by PJ Courtoy
 * Belevitch paper on core functions
-* Slides by Sandra Mols
+* Slides by Sandra Mols - here
 
