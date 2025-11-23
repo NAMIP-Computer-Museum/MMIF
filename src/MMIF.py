@@ -63,8 +63,8 @@ class Machine:
                     )
 
             # Extraction des deux paires
-            pair1 = (parts[1], parts[2])  # AAAAA, BBBB
-            pair2 = (parts[3], parts[4])  # CCCCC, DDDD
+            pair1 = (first, parts[1], parts[2])  # AAAAA, BBBB
+            pair2 = (first, parts[3], parts[4])  # CCCCC, DDDD
 
             result.append(pair1)
             result.append(pair2)
@@ -74,6 +74,6 @@ class Machine:
     @classmethod
     def decompile(cls, program: str) -> str:
         instructions = Machine.parse(program)
-        for opcode, address in instructions:
-  #          print(f"{opcode} {address}")
-            print(Instruction.opcode_to_mnemonic(opcode))
+        for mem, opcode, address in instructions:
+            mnemonic = Instruction.opcode_to_mnemonic(opcode)
+            print(f"{mem:>5}{opcode:>6}{mnemonic:>8}{address:>5}")

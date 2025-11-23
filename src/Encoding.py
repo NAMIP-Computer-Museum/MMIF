@@ -1,4 +1,5 @@
 from typing import List
+from pprint import pprint
 
 class Tetrad:
     """
@@ -89,34 +90,59 @@ class Float(Word):
 
 class Instruction(Word):
 
-    TO_OPCODE = {
-        #arithmetic
-        "+":  "04016",
-        "-":  "04026",
-        "+*": "04066",
-        "-*": "04076",
-        "x":  "04036",
-        "x-": "04035",
-        "*-": "04086",
-        "*-": "04085",
+    INDS = [ "I", "J", "K", "L"]
 
-        "+E":  "02116",
-        "-E":  "02126",
-        "+*E": "02166",
-        "-*E": "02176",
-        "xE":  "02136",
-        "x-E": "02135",
-        "*-E": "02186",
-        "*-E": "02185",
+    OPS = {
+        "+":  "16",
+        "-":  "26",
+        "+*": "66",
+        "-*": "76",
+        "x":  "36",
+        "x-": "35",
+        "*":  "86",
+        "*-": "85",
+    }
 
-        "+F":  "02016",
-        "-F":  "02026",
-        "+*F": "02066",
-        "-*F": "02076",
-        "xF":  "02036",
-        "x-F": "02035",
-        "*-F": "02086",
-        "*-F": "02085",
+    # removed no understood
+    # MODS = {
+    #     "+man": "12",
+    #     "-man": "62",
+    #     "+sgn": "22",
+    #     "-sgn": "72",
+    #     "+mod": "32",
+    #     "-mod": "82",
+    #     "+exp": "42",
+    #     "-exp": "92",
+    #     "noex": "13",
+    #     "exno": "23",
+    # }
+
+    REGS = {
+        "":  "40",   # w (acc)
+        "E": "21",
+        "F": "20",
+        "V": "25",
+        "W": "22",
+        "A": "23",   # ruban A sans piste aux
+        "Aa": "28",  # ruban A avec piste aux
+        "B": "24",   # ruban B sans piste aux
+        "Ba": "29"   # ruban B avec piste aux
+    }
+
+    BASE_TO_OPCODE = {
+        "noop": "00000",
+
+        #modifiers
+        "+man": "00012",
+        "-man": "00062",
+        "+sgn": "00022",
+        "-sgn": "00072",
+        "+mod": "00032",
+        "-mod": "00082",
+        "+exp": "00042",
+        "-exp": "00092",
+        "noex": "00013",
+        "exno": "00023",
 
         #inscriptions
         "->":  "09096",
@@ -147,40 +173,6 @@ class Instruction(Word):
         "+M=I": "01800",
         "+M=J": "01900",
 
-        #alterations --> sur W E F
-        "+man": "04012",
-        "-man": "04062",
-        "+sgn": "04022",
-        "-sgn": "04072",
-        "+mod": "04032",
-        "-mod": "04082",
-        "+exp": "04042",
-        "-exp": "04092",
-        "noex": "04013",
-        "exno": "04023",
-
-        "+manF": "02012",
-        "-manF": "02062",
-        "+sgnF": "02022",
-        "-sgnF": "02072",
-        "+modF": "02032",
-        "-modF": "02082",
-        "+expF": "02042",
-        "-expF": "02092",
-        "noexF": "02013",
-        "exnoF": "02023",
-
-        "+manE": "02112",
-        "-manE": "02162",
-        "+sgnE": "02122",
-        "-sgnE": "02172",
-        "+modE": "02132",
-        "-modE": "02182",
-        "+expE": "02142",
-        "-expE": "02192",
-        "noexE": "02113",
-        "exnoE": "02123",
-
         #drum config
         "drum": "90000",
 
@@ -194,6 +186,7 @@ class Instruction(Word):
         "rv(H)": "40200",
         "rvV=S": "43000",  # a clarifier
         "rvVft": "48000",  # a clarifier
+        "rv-K":  "41400",  # back for routine with cond ?
 
          # transfert
         "A->prn" : "50000",
@@ -214,6 +207,15 @@ class Instruction(Word):
         "posB":    "98000",
         "modA":    "95000",  # with i variants
         "modB":    "94000",  # with i variants
+        "=W":      "07700",  # verifier manual says 0770 ?
+        "->W":     "07296",
+        "=W":      "07246",
+
+        # config
+        "float.pt":  "00011",
+        "fixed.pt":  "00021",
+        "end1":      "00031",
+        "end2":      "00041",
 
         # alarmes
         "bloc.al":   "00014",
@@ -223,8 +225,59 @@ class Instruction(Word):
         "end.al":    "47000"
     }
 
-    TO_MNEMONIC = {v: k for k, v in TO_OPCODE.items()}
-    print(TO_MNEMONIC)
+    def _init_to_opcode(base, regs, ops, inds):
+        # static list
+        res = base.copy()
+
+        # combinatory for operations on registers
+        for mn_reg, oc_reg in regs.items():
+            for mn_op, oc_op in ops.items():
+                mn = f"{mn_op}{mn_reg}"
+                oc = f"0{oc_reg}{oc_op}"
+                res[mn] = oc
+
+        # apply indices where appropriate
+        prefixes = ("040", "090", "400")
+        matching_keys = [k for k, v in res.items() if v.startswith(prefixes)]
+        print("*** KEYS")
+        print(matching_keys)
+        for key in matching_keys:
+            val = res[key]
+            for i in [1,2,3,4]:
+                mn = key+"("+inds[i-1]+")"
+                oc = res[key]
+                oc = oc[:2]+str(i)+oc[3:]
+                res[mn] = oc
+
+                if val.startswith("040"):
+                    mn = key+"(v+"+inds[i-1]+")"
+                    oc = "03"+str(i)+oc[3:]
+                    res[mn] = oc
+
+            if val.startswith("040"):
+                mn = key + "(v)"
+                oc = "030" + oc[3:]
+                res[mn] = oc
+
+        # removed not understood
+        # combinatory for modifiers on registers
+        # for mn_reg, oc_reg in regs.items():
+        #     for mn_mod, oc_mod in mods.items():
+        #         mn = f"{mn_mod}{mn_reg}"
+        #         oc = f"0{oc_reg}{oc_mod}"
+        #         res[mn] = oc
+
+        return res
+
+    def _init_to_mnemonic(to_opcode):
+        res = {v: k for k, v in to_opcode.items()}
+        return res
+
+    TO_OPCODE = _init_to_opcode(BASE_TO_OPCODE,REGS,OPS, INDS)
+    TO_MNEMONIC = _init_to_mnemonic(TO_OPCODE)
+
+    pprint(TO_OPCODE)
+    pprint(TO_MNEMONIC)
 
     def __init__(self, mnemonic: str, address: int):
         super().__init__()
@@ -241,7 +294,6 @@ class Instruction(Word):
 
     @classmethod
     def opcode_to_mnemonic(cls, opcode: str) -> str:
-        print(opcode)
         return Instruction.TO_MNEMONIC[opcode]
 
     @classmethod
