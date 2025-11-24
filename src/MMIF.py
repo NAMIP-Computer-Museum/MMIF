@@ -76,4 +76,5 @@ class Machine:
         instructions = Machine.parse(program)
         for mem, opcode, address in instructions:
             mnemonic = Instruction.opcode_to_mnemonic(opcode)
-            print(f"{mem:>5}{opcode:>6}{mnemonic:>8}{address:>5}")
+            if address=="0000": address="" # remove some noise
+            print(f"{mem:<5}{opcode:<6}{mnemonic:<8}{address:<5}")
