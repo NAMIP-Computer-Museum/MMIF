@@ -9,8 +9,15 @@
 # Instruction Set
 * find manual
 
+# Internal library of functions
+
+* inverse
+* sin
+* etc
+
 # Example programs/usage:
 
+* see full list
 * demo sqrt2
 * Bessel functions (for ERM)
 
@@ -21,4 +28,5 @@
 * Account by PJ Courtoy
 * Belevitch paper on core functions
 * Slides by Sandra Mols - here
-
+* CECE document 1 - manuel de programmation (in French)
+* CECE document 2 - pseudo-code Manual
