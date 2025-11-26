@@ -69,19 +69,25 @@ class Tetrad:
 
     @classmethod
     def encode_string(cls, s: str) -> List["Tetrad"]:  # forward ref
+        print(s)
         tab = [Tetrad(int(d)) for d in s]
+        return tab
+
+    @classmethod
+    def decode_tetrad(self, lst: List["Tetrad"]) -> str: # forward ref
+        return "".join(map(str, lst))
 
 class Word:
 
     def __init__(self):
-        self.tab = [Tetrad() for _ in range(18)]
+        self.content = [Tetrad(0) for _ in range(18)]
 
     def __str__(self):
         return f"Word with value: {self.value}"
 
 
 class Float(Word):
-    def __init__(self, mantissa, exponent):
+    def __init__(self):
         super().__init__()  # Call Word.__init__
 
     def __str__(self):
@@ -279,15 +285,34 @@ class Instruction(Word):
     pprint(TO_OPCODE)
     pprint(TO_MNEMONIC)
 
-    def __init__(self, mnemonic: str, address: int):
+    def __init__(self):
         super().__init__()
+
+    def set_instruction(self, i, opcode: str, address: str):
+        if i not in (0, 1):
+            raise ValueError("Bad instruction index")
+
         # 5 tetrad for opcode
-        t_opcode = Tetrad.encode_string(self.mnemonic_to_opcode(str))
+        t_opcode = Tetrad.encode_string(opcode)
 
         # 4 tetrad for address
-        if address % 5 != 0:
-            raise ValueError(f"Bad Address {address}")
+#        if int(address) % 5 != 0:
+#            raise ValueError(f"Bad Address {address}")
         t_address = Tetrad.encode_string(address)
+
+        # store
+        self.content[i*9:i*9+5] = t_opcode
+        self.content[i*9+5:i*9+9] = t_address
+
+    def get_opcode(self, i) -> str:
+        if i not in (0, 1):
+            raise ValueError("Bad instruction index")
+        return Tetrad.decode_tetrad(self.content[i*9:i*9+5])
+
+    def get_address(self, i) -> str:
+        if i not in (0, 1):
+            raise ValueError("Bad instruction index")
+        return Tetrad.decode_tetrad(self.content[i*9+5:i*9+9])
 
     def __str__(self):
         return f"Instruction word (opcode {self.opcode}) with value: {self.value}"
@@ -299,6 +324,23 @@ class Instruction(Word):
     @classmethod
     def mnemonic_to_opcode(cls, mnemonic: str) -> str:
         return Instruction.TO_OPCODE[str]
+
+    def execute(self, pi: int, m:"Machine"):
+        oc = self.get_opcode(pi)
+        ad = self.get_address(pi)
+
+        if oc.startswith("4"): # jump
+            if oc=='40000':
+                m.pc = int(ad)
+            if oc=="41000" and m.ch:
+                m.pc = int(ad)
+            if oc=="42000":
+                m.running = False
+            if oc=="47000":
+                m.running = False
+                m.alarm = True
+
+
 
 class Mantissa:
     """

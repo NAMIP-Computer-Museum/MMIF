@@ -25,6 +25,10 @@ if __name__ == "__main__":
     m4 = m2.sub(m1)
     print("m2 - m1 =", m4)
 
+    enc = Tetrad.encode_string("0003")
+    dec = Tetrad.decode_tetrad(enc)
+    print(dec)
+
     source = """
     -> r1
     =  F
@@ -86,3 +90,10 @@ if __name__ == "__main__":
     print("=================================")
     Machine.decompile(bin_inverse)
     print("=================================")
+
+    mmif = Machine()
+    mmif.load(bin_inverse)
+    mmif.drum_p.dump(8265,20)
+    mmif.run(8265)
+
+#    mmif.test()

@@ -1,37 +1,80 @@
+import math
 from typing import List, Tuple
-from Encoding import Instruction
+from Encoding import Instruction, Float
+from random import randint
 import re
 
 class Drum:
     N_SECTORS = 20
     N_TRACKS  = 100
 
-    def __init__(self):
-        content = [[0 for _ in range(Drum.N_SECTORS)] for _ in range(Drum.N_TRACKS)]    # TODO Words
+    def __init__(self, name):
+        self.name = name
+        self.content = [[0 for _ in range(Drum.N_SECTORS)] for _ in range(Drum.N_TRACKS)]    # TODO Words
 
-    def read(self, sector: int, track: int) -> int:
+    def read(self, track: int, sector: int, ) -> Instruction:
         if sector < 0 or sector > 99 or sector % 5 != 0:
             raise ValueError(f"Bad sector {sector}")
         if track < 0 or track > 99:
             raise ValueError(f"Bad track {sector}")
-        return self.content[sector//5][track]
+        return self.content[track][sector//5]
 
-    def write(self, sector: int, track: int, w: int):  #
+    def write(self, track: int, sector: int, w: Instruction):
+#        print(f"write {sector} {track}")
         if sector < 0 or sector > 99 or sector % 5 != 0:
             raise ValueError(f"Bad sector {sector}")
         if track < 0 or track > 99:
             raise ValueError(f"Bad track {sector}")
-        self.content[sector//5][track] = w
+        self.content[track][sector//5] = w
 
+    @staticmethod
+    def sector(mem: int):
+        return mem % 100
+
+    @staticmethod
+    def track(mem: int):
+        return mem // 100
+
+    def store(self, instructions: List[Tuple[int, str, str]]):
+        if len(instructions)%2 == 1:
+            raise ValueError("Instruction list should be even !")
+        for i in range(0, len(instructions) - 1, 2):
+            mem1, opcode1, address1 = instructions[i]
+            mem2, opcode2, address2 = instructions[i+1]
+            if mem1 != mem2:
+                raise ValueError(f"Bad address pair {mem1} {mem2}")
+            instr = Instruction()
+            instr.set_instruction(0, opcode1, address1)
+            instr.set_instruction(1, opcode2, address2)
+            self.write(Drum.track(mem1), Drum.sector(mem1), instr)
+
+    def dump(self, mem: int, num: int):
+        print(f"ICI {mem} {num}")
+        for addr in range(mem, mem+num,5):
+            inst = self.read(Drum.track(addr), Drum.sector(addr))
+            oc1 = inst.get_opcode(0)
+            oc2 = inst.get_opcode(1)
+            ad1 = inst.get_address(0)
+            ad2 = inst.get_address(1)
+            print(f"{addr} {oc1} {ad1}")
+            print(f"{addr} {oc2} {ad2}")
 
 class Machine:
 
     def __init__(self):
-        self.program = Drum("Program")
-        self.data    = Drum("Data")
+        self.drum_p = Drum("Program")
+        self.drum_d = Drum("Data")
+        self.pc = 0
+        self.pi = 0
+        self.ch = False
+        self.running = False
+        self.alarm = False
+        self.w = Float()
+        self.E = Float()
+        self.F = Float()
 
     @classmethod
-    def parse(cls, text: str) -> List[Tuple[str,str]]:
+    def parse(cls, text: str) -> List[Tuple[int, str,str]]:
         # reading lines
         lines = [l.strip() for l in text.strip().split("\n")]
         result = []
@@ -47,6 +90,7 @@ class Machine:
 
             # Vérification de la séquence du premier nombre
             first = int(parts[0])
+
             if expected is None:
                 expected = first  # Premier attendu = premier trouvé
             elif first != expected:
@@ -78,3 +122,52 @@ class Machine:
             mnemonic = Instruction.opcode_to_mnemonic(opcode)
             if address=="0000": address="" # remove some noise
             print(f"{mem:<5}{opcode:<6}{mnemonic:<8}{address:<5}")
+
+    def load(self, program: str):
+        instructions = Machine.parse(program)
+        self.drum_p.store(instructions)
+
+    def run(self, start: int):
+        self.pc = start
+        self.pi = 0
+        self.running = True
+        self.alarm = False
+        self.ch = True # test
+        while self.running:
+            print(f"{self.pc} {self.pi}")
+            if self.pi == 0:
+                inst = self.drum_p.read(Drum.track(self.pc), Drum.sector(self.pc))
+            else:
+                self.pc = self.pc + 5
+            inst.execute(self.pi, self)
+            self.pi = (self.pi+1) % 2
+
+    def test(self):
+        for i in range(1000):
+            mem = randint(0,100)*100+randint(0,20)*5
+            op1 = randint(0,10000)
+            op1 = f"{op1:05}"
+            ad1 = randint(0,1000)
+            ad1 = f"{ad1:04}"
+            op2 = randint(0,10000)
+            op2 = f"{op2:05}"
+            ad2 = randint(0,1000)
+            ad2 = f"{ad1:04}"
+            inst = Instruction()
+            inst.set_instruction(0,op1,ad1)
+            inst.set_instruction(1,op2,ad2)
+            rop1 = inst.get_opcode(0)
+            rop2 = inst.get_opcode(1)
+            rad1 = inst.get_address(0)
+            rad2 = inst.get_address(1)
+
+            print(f"ASS {repr(op1)} {repr(rop1)}")
+            assert op1 == rop1
+            print(f"ASS {repr(op2)} {repr(rop2)}")
+            assert op2 == rop2
+            print(f"ASS {repr(ad1)} {repr(rad1)}")
+            assert ad1 == rad1
+            print(f"ASS {repr(ad2)} {repr(rad2)}")
+            assert ad2 == rad2
+            print("ok")
+
