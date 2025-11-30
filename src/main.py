@@ -1,4 +1,4 @@
-from Encoding import Tetrad, Mantissa
+from Encoding import Tetrad, Mantissa, Float
 from MMIF import Machine
 
 if __name__ == "__main__":
@@ -94,6 +94,17 @@ if __name__ == "__main__":
     mmif = Machine()
     mmif.load(bin_inverse)
     mmif.drum_p.dump(8265,20)
+
+    print("**** RUN ****")
+    # initialisation of constants on drum
+    mmif.drum_p.write(9450,Float(-1,"496894410000000",+1,"01"))
+    mmif.drum_p.write(9455,Float(+1,"546583851000000",+1,"01"))
+    mmif.drum_p.write(9460,Float(+1,"216457031000000",+1,"01"))
+    mmif.drum_p.write(9465,Float(+1,"201601900000000",+1,"01"))
+    mmif.drum_p.write(9470,Float(+1,"200013038000000",+1,"01"))
+    mmif.set_f_reg("w",    Float(+1,"250000000000000",+1,"00"))
+
+    # program
     mmif.run(8265)
 
 #    mmif.test()

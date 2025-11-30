@@ -1,5 +1,6 @@
 from typing import List
 from pprint import pprint
+import math
 
 class Tetrad:
     """
@@ -69,7 +70,6 @@ class Tetrad:
 
     @classmethod
     def encode_string(cls, s: str) -> List["Tetrad"]:  # forward ref
-        print(s)
         tab = [Tetrad(int(d)) for d in s]
         return tab
 
@@ -87,12 +87,83 @@ class Word:
 
 
 class Float(Word):
-    def __init__(self):
+    def __init__(self, s_man=+1, man="000000000000000", s_exp=+1, exp="00"):
         super().__init__()  # Call Word.__init__
+        self.set_from_man_exp(s_man, man, s_exp, exp)
 
     def __str__(self):
-        return f"Float"
+        return f"Float {self.get_float()}"
 
+    def get_float(self):
+        return self.get_mantissa()*10**self.get_exponent()
+
+    def get_mantissa(self) -> float:
+        sm = "0."+Tetrad.decode_tetrad(self.content[1:16])
+        return self.get_m_sign()*float(sm)
+
+    def get_exponent(self) -> int:
+        se = Tetrad.decode_tetrad(self.content[16:18])
+        return self.get_e_sign()*float(se)
+
+    # TODO not sure assume "bit" 1
+    def get_m_sign(self) -> int:
+        ss = Tetrad.decode_tetrad(self.content[0:1])
+        sg = int(ss)
+        if sg % 2 == 0:
+            return +1
+        else:
+            return -1
+
+    # TODO not sure assume "bit" 2
+    def get_e_sign(self) -> int:
+        ss = Tetrad.decode_tetrad(self.content[0:1])
+        sg = int(ss)//2
+        if sg % 2 == 0:
+            return +1
+        else:
+            return -1
+
+    def set_from_string(self,s:str):
+        if len(s) != 18:
+            raise ValueError("Initialise from string requires 18 characters")
+        self.content = Tetrad.encode_string(s)
+
+    def set_from_man_exp(self, s_man: int, man: str, s_exp: int, exp:str):
+        if s_man == 0:
+            raise ValueError("Bad mantissa sign")
+        if s_exp ==0:
+            raise ValueError("Bad mantissa sign")
+
+        sgn = 0
+        print(s_man)
+        if s_man <0: sgn = sgn+1
+        if s_exp <0: sgn = sgn+2
+
+        s = f"{sgn}{man}{exp}"
+#        print(f"Encoding float {s}")
+        self.content = Tetrad.encode_string(s)
+
+    def set_from_float(self, f):
+        if f == 0:
+            s_man=+1
+            man="000000000000000"
+            s_exp=+1
+            exp=0
+        else:
+            s_man = +1 if f >= 0 else -1
+            f_abs = abs(f)
+
+            exponent = int(math.floor(math.log10(f_abs))) + 1  # +1 because digit point before mantissa
+            if abs(exponent)>49:
+                raise ValueError(f"Exponent cannot too large: {exponent}")
+            mantissa = f_abs / (10 ** exponent)
+            mantissa_scaled = int(round(mantissa * 10 ** 15))  # 15 digits after decimal
+            man = f"{mantissa_scaled:015d}"
+
+            s_exp = +1 if exponent >= 0 else -1
+            exp = f"{abs(exponent):02d}"
+
+        self.set_from_man_exp(s_man, man, s_exp, exp)
 
 class Instruction(Word):
 
@@ -317,6 +388,7 @@ class Instruction(Word):
     def __str__(self):
         return f"Instruction word (opcode {self.opcode}) with value: {self.value}"
 
+    # not sur if static of class better
     @classmethod
     def opcode_to_mnemonic(cls, opcode: str) -> str:
         return Instruction.TO_MNEMONIC[opcode]
@@ -325,22 +397,131 @@ class Instruction(Word):
     def mnemonic_to_opcode(cls, mnemonic: str) -> str:
         return Instruction.TO_OPCODE[str]
 
+    @classmethod
+    def compute(cls, op, a, b):
+        fa = a.get_float()
+        fb = b.get_float()
+        print(fa)
+        print(fb)
+        if op == "16":  # +
+            fr = fa+fb
+        elif op == "26":  # -
+            fr = fa-fb
+        elif op == "66":  # +*  # TODO non normalised not supported
+            fr = fa+fb
+        elif op == "76":  # -* # TODO non normalised not supported
+            fr = fa-fb
+        elif op == "36":
+            fr = fa*fb
+        elif op == "35":
+            fr = fa*(-fb)
+        else:
+            raise ValueError(f"Arithmetic operation not supported {op}")
+        res = Float()
+        res.set_from_float(fr)
+        print(f"op: {res}")
+        return res
+
     def execute(self, pi: int, m:"Machine"):
         oc = self.get_opcode(pi)
         ad = self.get_address(pi)
 
-        if oc.startswith("4"): # jump
-            if oc=='40000':
+        mne = Instruction.opcode_to_mnemonic(oc)
+        s_ad = ad
+        i_ad = int(ad)
+        if s_ad == "0000": s_ad = ""  # remove some noise
+        print("----------------------------------------")
+        print(f"{m.pc:<5}{oc:<6}{mne:<8}{s_ad:<5}")
+
+        # jumps and stop points
+        if oc.startswith("4"):
+            if oc=="40000":
                 m.pc = int(ad)
+                return
             if oc=="41000" and m.ch:
                 m.pc = int(ad)
+                return
             if oc=="42000":
                 m.running = False
+                return
             if oc=="47000":
                 m.running = False
                 m.alarm = True
+                return
 
+        # comparison (for jump)
+        if oc == "07446":
+            w = m.get_f_reg("w")
+            m.ch = (w.get_m_sign()<0)
+            return
 
+        # alteration: it is provisioned and interpreted on next order register
+        if (oc.startswith("000")):
+            m.alt = oc[3:4]
+            return
+
+        # immediate operation
+        if oc.startswith("03"):
+            idx = int(oc[2])
+            op  = oc[3:5]
+            imm = i_ad+idx       # address is interpreted as immediate value, index is added
+            man = f"{imm:04d}" + "0"*11
+            val = Float(+1,man,+1,"00")
+            w = m.get_f_reg("w")
+            w = Instruction.compute(op, w, val)
+            m.set_f_reg("w",w)
+            return
+
+        # operation with E or F register
+        if oc.startswith("020") or oc.startswith("021"):
+            op  = oc[3:5]
+            if oc=="020":
+                val=m.get_f_reg("F")
+            else:
+                val = m.get_f_reg("E")
+            w = m.get_f_reg("w")
+            w = Instruction.compute(op, w, val)
+            m.set_f_reg("w",w)
+            return
+
+        # operation with memory
+        if oc.startswith("04"):
+            idx = int(oc[2])
+            op  = oc[3:5]
+            word = m.drum_p.read(int(ad))
+            val = Float()
+            val.content = word.content   # quick cast
+            print(f"READ: {val}")
+            w = m.get_f_reg("w")
+            w = Instruction.compute(op, w, val)
+            m.set_f_reg("w",w)
+            return
+
+        if oc.startswith("070") or oc.startswith("071"):
+            reg = "F"
+            if oc[2]=="1": reg = "E"
+            if oc.endswith("96"):
+                m.set_f_reg(reg, m.get_f_reg("w"))
+                return
+            if oc.endswith("46"):
+                print(f"w: {m.get_f_reg('w')}")
+                m.set_f_reg(reg, m.get_f_reg("w"))
+                m.reset_f_reg("w")
+                print(f"F: {m.get_f_reg('F')}")
+                return
+
+        # transfer back to memory
+        if oc.startswith("090"):
+            if oc == "09096":    # ->
+                print( m.get_f_reg("w"))
+                m.drum_p.write(i_ad, m.get_f_reg("w"))
+                return
+            if oc == "09046":  # =  resets to 0
+                m.drum_p.write(i_ad, m.get_f_reg("w"))
+                m.reset_f_reg("w")
+                return
+
+        raise ValueError(f"Instruction {oc} not yet supported")
 
 class Mantissa:
     """
