@@ -4,7 +4,7 @@ This repo aims at gathering key material to understand the IRSIA-FNRS Mathematic
 (Machine Mathematique IRSIA-FNRS in French, MMIF for short), a first generation Belgian computer, i.e. vacumm tube-based).
 It was developed by Bell Labs in Antwerpen from 1952 to 1955 and was then operated until 1962 mainly for scientific research.
 
-![MMIF banner](docs/MMIF-banner.png)
+![MMIF banner](docs/MMIF-banner.jpg)
 
 The MMIF has many interesting features such as:
 * Harvard kind of architecture based on a program and a data magnetic drum
