@@ -56,10 +56,10 @@ Not yet supported:
 
 ### Example: inverse function
 
-here are some material
-* code dump
+some material is available in this [example directory](examples/inverse)
+* code dump (picture from manual)
 * documented assembly
-* disassembly from simulator
+* disassembly from simulator[01-inv-original.pdf](..%2FPDFtools%2F01-inv-original.pdf)
 * running trace computing 1/4 = 0.25
 
 ## References (by chronological order)
