@@ -4,6 +4,8 @@ This repo aims at gathering key material to understand the IRSIA-FNRS Mathematic
 (Machine Mathematique IRSIA-FNRS in French, MMIF for short), a first generation Belgian computer, i.e. vacumm tube-based).
 It was developed by Bell Labs in Antwerpen from 1952 to 1955 and was then operated until 1962 mainly for scientific research.
 
+![MMIF banner](docs/MMIF-banner.png)
+
 The MMIF has many interesting features such as:
 * Harvard kind of architecture based on a program and a data magnetic drum
 * early instruction set and assembly language
@@ -20,21 +22,54 @@ The repository mainly gathers:
 * (planned) a 3D model of the machine
 
 ## Documents
-  * technical documents related to the machine that were not released on the Internet until now (e.g. manuals, pseudocode, problem list)
-  * some pictures and representations of the machine
-  * papers related to the technology and algorithms used by the MMIF and other mathematical machines for comparison purposes
-  * later documents analysing the machine (scientific articles, books), either reference or downloadable when 
-  * note those documents are hosted here but also available on [archive.org](https://archive.org/details/mmif-tech-doc)
 
-## Simulator
+The repository gathers the following types of documents in the [docs](docs) directory
+* technical documents related to the machine that were not released on the Internet until now (e.g. manuals, pseudocode, problem list)
+* some pictures and representations of the machine
+* papers related to the technology and algorithms used by the MMIF and other mathematical machines for comparison purposes
+* later documents analysing the machine (scientific articles, books), either reference or downloadable when 
 
+Note those documents are hosted here but also available on [archive.org](https://archive.org/details/mmif-tech-doc)
 
-# References
+## Simulator/Disassembler
 
-* Book From Marie Gevers - local copy (in French)
-* Summary paper (In Engligh)
-* Account by PJ Courtoy
-* Belevitch paper on core functions
-* Slides by Sandra Mols - here
-* CECE document 1 - manuel de programmation (in French)
-* CECE document 2 - pseudo-code Manual
+A python simulator is available in the [src](src) directory. This is work in progress with the following supported features
+* support of main instructions: memory transfer with drums, floating point operations and alteration, comparison, jumps, alarms
+* disassembly of memory dumps
+* running with breakpoints and stepping
+* demo code from the internal math library
+* low-level bi-quinary representation
+
+Not yet supported:
+* tape and printer operation
+* more accurate implementation of floating point operations closer to the calculating unit
+* investigation on some incomplete description of machine behaviour
+* more code examples
+* failure injection
+
+### Installing and running the simulator
+* just clone repository and install some required references
+* launch main.py
+* by default an inverse function is launched
+* breakpoint need to be set using "m.set_breakpoint(XXXX)" where XXXX is address, multiple of 5
+* when hitting a break point hit return in console to continue in stepping mode, type r+return to stop stepping
+
+### Example: inverse function
+
+here are some material
+* code dump
+* documented assembly
+* disassembly from simulator
+* running trace computing 1/4 = 0.25
+
+## References (by chronological order)
+
+* 1947 - About Mathematical Machines by Léon Brillouin
+* 1956 - About Core Functions by Vitold Belevitch 
+* 1957 - CECE document 1 - manuel de programmation (in French)
+* 1958 - CECE document 2 - pseudo-code Manual
+* 1959 - MKII document 4 - about elementary functions
+* 2008 - MMIF slides by Sandra Mols
+* 2010 - Account on the Machine by Pierre-Jacques Courtoy
+* 2010 - MMIF Book by Marie Gevers (in French)
+* 2014 - MMIF summary paper by Marie Gevers (in Engligh)
