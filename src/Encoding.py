@@ -105,6 +105,16 @@ class Float(Word):
         se = Tetrad.decode_tetrad(self.content[16:18])
         return self.get_e_sign()*float(se)
 
+    def set_exponent(self, exp: str):
+        if len(exp) != 2:
+            raise ValueError("Exponent digit string of length 2 expected")
+        self.content[-2:] = Tetrad.encode_string(exp)
+
+    def set_mantissa(self, mantissa: str):
+        if len(mantissa) != 15:
+            raise ValueError("Mantissa digit string of length 15 expected")
+        self.content[1:16] = Tetrad.encode_string(mantissa)
+
     # TODO not sure assume "bit" 1
     def get_m_sign(self) -> int:
         ss = Tetrad.decode_tetrad(self.content[0:1])
@@ -113,6 +123,13 @@ class Float(Word):
             return +1
         else:
             return -1
+
+    def set_m_sign(self, s_man: int):
+        s_exp = self.get_e_sign()
+        sgn = 0
+        if s_man<0: sgn = sgn+1
+        if s_exp<0: sgn = sgn+2
+        self.content[0:1] = Tetrad.encode_string(f"{sgn}")
 
     # TODO not sure assume "bit" 2
     def get_e_sign(self) -> int:
@@ -123,6 +140,13 @@ class Float(Word):
         else:
             return -1
 
+    def set_e_sign(self, s_exp: int):
+        s_man = self.get_m_sign()
+        sgn = 0
+        if s_man<0: sgn = sgn+1
+        if s_exp<0: sgn = sgn+2
+        self.content[0:1] = Tetrad.encode_string(f"{sgn}")
+
     def set_from_string(self,s:str):
         if len(s) != 18:
             raise ValueError("Initialise from string requires 18 characters")
@@ -131,16 +155,17 @@ class Float(Word):
     def set_from_man_exp(self, s_man: int, man: str, s_exp: int, exp:str):
         if s_man == 0:
             raise ValueError("Bad mantissa sign")
-        if s_exp ==0:
-            raise ValueError("Bad mantissa sign")
+        if s_exp == 0:
+            raise ValueError("Bad exponent sign")
+        if len(man) != 15:
+            raise ValueError("Bad mantissa length")
+        if len(exp) != 2:
+            raise ValueError("Bad exponent length")
 
         sgn = 0
-        print(s_man)
-        if s_man <0: sgn = sgn+1
-        if s_exp <0: sgn = sgn+2
-
+        if s_man<0: sgn = sgn+1
+        if s_exp<0: sgn = sgn+2
         s = f"{sgn}{man}{exp}"
-#        print(f"Encoding float {s}")
         self.content = Tetrad.encode_string(s)
 
     def set_from_float(self, f):
@@ -148,7 +173,7 @@ class Float(Word):
             s_man=+1
             man="000000000000000"
             s_exp=+1
-            exp=0
+            exp="00"  # TODO not sure how zero is encoded
         else:
             s_man = +1 if f >= 0 else -1
             f_abs = abs(f)
@@ -164,6 +189,40 @@ class Float(Word):
             exp = f"{abs(exponent):02d}"
 
         self.set_from_man_exp(s_man, man, s_exp, exp)
+
+    def alter(self, alt: str):
+        if alt is None:
+            return
+        elif alt == "12": # +man
+            self.set_exponent("00")
+            self.set_m_sign(+1)
+            self.set_e_sign(+1)
+        elif alt == "62": # -man
+            self.set_exponent("00")
+            self.set_m_sign(-1)
+            self.set_e_sign(+1)
+        elif alt == "22": # +sgn
+            sgn = self.get_m_sign()
+            self.set_from_man_exp(+sgn, "100000000000000", +1, "01")
+        elif alt == "32": # +mod
+            self.set_m_sign(+1)
+        elif alt == "32": # -mod
+            self.set_m_sign(-1)
+        elif alt == "72": # -sgn
+            sgn = self.get_m_sign()
+            self.set_from_man_exp(-sgn, "100000000000000", +1, "01")
+        elif alt == "42": # +exp
+            self.set_mantissa("100000000000000")
+            self.set_m_sign(+1)
+        elif alt == "92": # -exp
+            self.set_mantissa("100000000000000")
+            self.set_m_sign(+1)
+            sgn = self.get_e_sign()
+            self.set_e_sign(-sgn)
+        else:
+            raise ValueError(f"Alteration {alt} is not supported")
+
+        print(f"ALT {self}")
 
 class Instruction(Word):
 
@@ -401,8 +460,8 @@ class Instruction(Word):
     def compute(cls, op, a, b):
         fa = a.get_float()
         fb = b.get_float()
-        print(fa)
-        print(fb)
+        print(f"a: {fa}")
+        print(f"b: {fb}")
         if op == "16":  # +
             fr = fa+fb
         elif op == "26":  # -
@@ -431,6 +490,10 @@ class Instruction(Word):
         i_ad = int(ad)
         if s_ad == "0000": s_ad = ""  # remove some noise
         print("----------------------------------------")
+        nw = m.get_f_reg("w")
+        ne = m.get_f_reg("E")
+        nf = m.get_f_reg("F")
+        print(f"w: {nw} E:{ne} F:{nf}")
         print(f"{m.pc:<5}{oc:<6}{mne:<8}{s_ad:<5}")
 
         # jumps and stop points
@@ -441,6 +504,9 @@ class Instruction(Word):
             if oc=="41000" and m.ch:
                 m.pc = int(ad)
                 return
+            if oc=="41400":
+                m.running = False # TODO used here for testing routine
+                return
             if oc=="42000":
                 m.running = False
                 return
@@ -450,14 +516,16 @@ class Instruction(Word):
                 return
 
         # comparison (for jump)
-        if oc == "07446":
+        if oc == "07446":  # =ch
             w = m.get_f_reg("w")
             m.ch = (w.get_m_sign()<0)
+            m.reset_f_reg("w")   # TODO check but consistent with =
             return
 
         # alteration: it is provisioned and interpreted on next order register
         if (oc.startswith("000")):
-            m.alt = oc[3:4]
+            m.alt = oc[3:5]
+            print(f"Alteration recorded {m.alt}")
             return
 
         # immediate operation
@@ -467,6 +535,8 @@ class Instruction(Word):
             imm = i_ad+idx       # address is interpreted as immediate value, index is added
             man = f"{imm:04d}" + "0"*11
             val = Float(+1,man,+1,"00")
+            val.alter(m.alt)
+            m.alt = None
             w = m.get_f_reg("w")
             w = Instruction.compute(op, w, val)
             m.set_f_reg("w",w)
@@ -475,12 +545,16 @@ class Instruction(Word):
         # operation with E or F register
         if oc.startswith("020") or oc.startswith("021"):
             op  = oc[3:5]
-            if oc=="020":
-                val=m.get_f_reg("F")
+            if oc.startswith("020"):
+                val = m.get_f_reg("F")
             else:
                 val = m.get_f_reg("E")
+            copy = Float()
+            copy.set_from_string(Tetrad.decode_tetrad(val.content))
+            copy.alter(m.alt)
+            m.alt = None
             w = m.get_f_reg("w")
-            w = Instruction.compute(op, w, val)
+            w = Instruction.compute(op, w, copy)
             m.set_f_reg("w",w)
             return
 
@@ -489,11 +563,12 @@ class Instruction(Word):
             idx = int(oc[2])
             op  = oc[3:5]
             word = m.drum_p.read(int(ad))
-            val = Float()
-            val.content = word.content   # quick cast
-            print(f"READ: {val}")
+            copy = Float()
+            copy.set_from_string(Tetrad.decode_tetrad(word.content))
+            copy.alter(m.alt)
+            m.alt = None
             w = m.get_f_reg("w")
-            w = Instruction.compute(op, w, val)
+            w = Instruction.compute(op, w, copy)
             m.set_f_reg("w",w)
             return
 
@@ -512,12 +587,17 @@ class Instruction(Word):
 
         # transfer back to memory
         if oc.startswith("090"):
+            val = m.get_f_reg("w")
+            copy = Float()
+            copy.set_from_string(Tetrad.decode_tetrad(val.content))
+
             if oc == "09096":    # ->
-                print( m.get_f_reg("w"))
-                m.drum_p.write(i_ad, m.get_f_reg("w"))
+                print(val)
+                m.drum_p.write(i_ad, copy)
+                print(f"CHECK {m.drum_p.read(i_ad)}")
                 return
             if oc == "09046":  # =  resets to 0
-                m.drum_p.write(i_ad, m.get_f_reg("w"))
+                m.drum_p.write(i_ad, copy)
                 m.reset_f_reg("w")
                 return
 

@@ -91,6 +91,9 @@ class Machine:
         self.alarm = False
         self.REGS = Machine._init_regs()
 
+        self.bp = []
+        self.stepping = False
+
     def get_f_reg(self, reg: str) -> Float:
         if reg not in ("w", "E", "F"):
             raise ValueError(f"Not a float register: {reg}")
@@ -104,9 +107,7 @@ class Machine:
     def set_f_reg(self, reg:str, val:Float):
         if reg not in ("w", "E", "F"):
             raise ValueError(f"Not a float register: {reg}")
-        print(f"ICI set reg {reg} {val}")
         copy = Float()
-        print(f"ICI: {Tetrad.decode_tetrad(val.content)}")
         copy.set_from_string(Tetrad.decode_tetrad(val.content))
         self.REGS[reg] = copy
 
@@ -115,7 +116,7 @@ class Machine:
             raise ValueError(f"Not a float register: {reg}")
         if sgn == 0:
             raise ValueError(f"Bad sign for reset")
-        self.REGS[reg].set_from_man_exp(sgn, "00000000000000", +1, "00")
+        self.REGS[reg].set_from_man_exp(sgn, "000000000000000", +1, "00")
 
     @classmethod
     def parse(cls, text: str) -> List[Tuple[int, str,str]]:
@@ -167,6 +168,9 @@ class Machine:
             if address=="0000": address="" # remove some noise
             print(f"{mem:<5}{opcode:<6}{mnemonic:<8}{address:<5}")
 
+    def set_breakpoint(self, add: int):
+        self.bp.append(add)
+
     def load(self, program: str):
         instructions = Machine.parse(program)
         self.drum_p.store(instructions)
@@ -178,13 +182,20 @@ class Machine:
         self.alarm = False
         self.ch = True # test
         while self.running:
+            if self.pc in self.bp and self.pi == 0:
+                self.stepping = True
+
             if self.pi == 0:
                 inst = self.drum_p.read(self.pc)
             else:
                 self.pc = self.pc + 5
+
             inst.execute(self.pi, self)
-            self.pi = (self.pi+1) % 2
-            input("Key to continue ...")
+            self.pi = (self.pi + 1) % 2
+
+            if self.stepping:
+                k = input("Key to continue ...").strip()
+                if k.lower() ==  "r": self.stepping = False
 
     def test(self):
         for i in range(1000):

@@ -36,20 +36,21 @@ def man(x: float) -> float:
     return abs(x) / e / 10
 
 
-a0 = -0.49689441  * 10
-b0 = +0.546583851 * 10
+a0 = -0.49689441  * 100
+b0 = +0.546583851 * 100
 a1 = +0.216457031 * 10
 a2 = +0.2016019   * 10
 a3 = +0.200013038 * 10
 
-x = 0.9
+x = 0.25
 
 print(sgn(x))
-print(f"man={man(x)}")
-print(f"exp={exp(x)}")
+print(f" man={man(x)}")
+print(f" exp={exp(x)}")
 print(f"mexp={mexp(x)}")
+print(f" sgn={sgn(x)}")
 
-y0 = sgn(x)*(mexp(x))*(a0*man(x)+b0)*10
+y0 = sgn(x)*(mexp(x))*(a0*man(x)+b0)
 y1 = y0 * (a1-x*y0)
 y2 = y1 * (a2-x*y1)
 y3 = y2 * (a3-x*y2)
@@ -57,6 +58,7 @@ y4 = y3 * (2.0-x*y3)
 y5 = y4 * (2.0-x*y4)
 
 print(f"   x={x}")
+print(f"  y0={y0}")
 print(f"  y1={y1}")
 print(f"  y2={y2}")
 print(f"  y3={y3}")

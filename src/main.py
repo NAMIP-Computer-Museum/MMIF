@@ -97,14 +97,22 @@ if __name__ == "__main__":
 
     print("**** RUN ****")
     # initialisation of constants on drum
-    mmif.drum_p.write(9450,Float(-1,"496894410000000",+1,"01"))
-    mmif.drum_p.write(9455,Float(+1,"546583851000000",+1,"01"))
+    mmif.drum_p.write(9400,Float(+1,"100000000000000",+1,"01"))  # 1
+    mmif.drum_p.write(9405,Float(+1,"200000000000000",+1,"01"))  # 2
+    mmif.drum_p.write(9440,Float(+1,"500000000000000",-1,"13"))  # 2
+
+    mmif.drum_p.write(9450,Float(-1,"496894410000000",+1,"02"))  # paper was +1 but to check with formula
+    mmif.drum_p.write(9455,Float(+1,"546583851000000",+1,"02"))  # paper was +1 but to check with formula
     mmif.drum_p.write(9460,Float(+1,"216457031000000",+1,"01"))
     mmif.drum_p.write(9465,Float(+1,"201601900000000",+1,"01"))
     mmif.drum_p.write(9470,Float(+1,"200013038000000",+1,"01"))
-    mmif.set_f_reg("w",    Float(+1,"250000000000000",+1,"00"))
+
+#   mmif.set_f_reg("w",    Float(+1,"250000000000000",+1,"00"))
+    mmif.set_f_reg("w",    Float(+1,"400000000000000",+1,"01"))
 
     # program
+#    mmif.set_breakpoint(8265)
+    mmif.set_breakpoint(8345)
     mmif.run(8265)
 
 #    mmif.test()
