@@ -460,8 +460,6 @@ class Instruction(Word):
     def compute(cls, op, a, b):
         fa = a.get_float()
         fb = b.get_float()
-        print(f"a: {fa}")
-        print(f"b: {fb}")
         if op == "16":  # +
             fr = fa+fb
         elif op == "26":  # -
@@ -478,7 +476,7 @@ class Instruction(Word):
             raise ValueError(f"Arithmetic operation not supported {op}")
         res = Float()
         res.set_from_float(fr)
-        print(f"op: {res}")
+        print(f"a: {fa}  b:{fb}  res:{res.get_float()}")
         return res
 
     def execute(self, pi: int, m:"Machine"):
@@ -525,7 +523,7 @@ class Instruction(Word):
         # alteration: it is provisioned and interpreted on next order register
         if (oc.startswith("000")):
             m.alt = oc[3:5]
-            print(f"Alteration recorded {m.alt}")
+#            print(f"Alteration recorded {m.alt}")
             return
 
         # immediate operation

@@ -62,6 +62,13 @@ some material is available in this [example directory](examples/inverse)
 * disassembly from simulator
 * running trace computing 1/4 = 0.25
 
+### Interesting/Fun facts to elaborate
+
+* reason for biquinary encoding
+* decimal vs binary operation, some impact (e.g. 0+ and 0-)
+* early electronics reliability (vacuum tubes)
+* no division in calculating unit
+
 ## References (by chronological order)
 
 * 1947 - About Mathematical Machines by Léon Brillouin
