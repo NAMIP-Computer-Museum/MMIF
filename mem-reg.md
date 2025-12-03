@@ -18,7 +18,7 @@ Drums are similar and are organised as follows:
 * physical representation: see [encocoding.md]
 * mean access time: 7 ms
 
-Registers:
+## Registers:
 * floating registers - 18 digits 
    * w (omega) can be considered as the accumulator, it is directly used by the calculating unit as input/output   
    * E,F internal registers with fast access time
