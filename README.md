@@ -31,6 +31,11 @@ The repository gathers the following types of documents in the [docs](docs) dire
 
 Note those documents are hosted here but also available on [archive.org](https://archive.org/details/mmif-tech-doc)
 
+## More technical details
+
+* [Memory and Registers](mem-reg.md)
+* [Instruction set](instructions.md)
+
 ## Simulator/Disassembler
 
 A python simulator is available in the [src](src) directory. This is work in progress with the following supported features
@@ -41,6 +46,7 @@ A python simulator is available in the [src](src) directory. This is work in pro
 * low-level bi-quinary representation
 
 Not yet supported:
+* fixed point and double precision arithmetic
 * tape and printer operation
 * more accurate implementation of floating point operations closer to the calculating unit
 * investigation on some incomplete description of machine behaviour
@@ -68,6 +74,7 @@ some material is available in this [example directory](examples/inverse)
 * decimal vs binary operation, some impact (e.g. 0+ and 0-)
 * early electronics reliability (vacuum tubes)
 * no division in calculating unit
+* is there a clock ? do all operations take the same time ?
 
 ## References (by chronological order)
 
