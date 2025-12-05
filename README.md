@@ -1,19 +1,19 @@
 # IRSIA-FNRS Mathematical Machine - Machine Mathématique IRSIA FNRS (MMIF)
 
-This repo aims at gathering key material to understand the IRSIA-FNRS Mathematical Machine
-(Machine Mathematique IRSIA-FNRS in French, MMIF for short), a first generation Belgian computer, i.e. vacumm tube-based).
-It was developed by Bell Labs in Antwerpen from 1952 to 1955 and was then operated until 1962 mainly for scientific research.
+This repo aims at gathering key material to understand the IRSIA-FNRS Mathematical Machine (Machine Mathematique IRSIA-FNRS in French, MMIF for short).  
+Based vacumm tube technology, this pioneering machine is among the few first generation national computers of Europe.
+It was designed in the Bell Telephone Manufacturing company in Antwerpen from 1946 to 1955 and then operated until 1962, mainly for scientific research.
 
 ![MMIF banner](docs/MMIF-banner.jpg)
 
 The MMIF has many interesting features such as:
-* Harvard kind of architecture based on a program and a data magnetic drum
+* Harvard kind of architecture which separates program and data on two different drums
 * early instruction set and assembly language
-* floating point unit (+/-/*) "groupe calculateur" with high precision (15 digits mantissa) and operating in decimal format
+* calculating unit "groupe calculateur" with high precision floating point (15 digits mantissa) operation (+,-,*) operating in decimal format
 * possibility to operate in fixed point and double precision
-* mathematical library to efficiently compute all scientific function (division, trigonometric, exponential, logarithms) 
-* input/output to drums, tapes, console/printer
-* software-level reliability management patterns
+* mathematical library to efficiently compute all scientific functions (division, trigonometric, exponential, logarithms, root extraction)
+* inputs and outputs to drums, tapes, console and printer
+* software-level reliability management
 * bi-quinary encoding at hardware level
 
 The repository mainly gathers:
@@ -78,12 +78,12 @@ some material is available in this [example directory](examples/inverse)
 
 ## References (by chronological order)
 
-* 1947 - About Mathematical Machines by Léon Brillouin
-* 1956 - About Core Functions by Vitold Belevitch 
+* 1947 - About Mathematical Machines by Léon Brillouin (in French)
+* 1956 - About Core Functions by Vitold Belevitch (in French)
 * 1957 - CECE document 1 - manuel de programmation (in French)
-* 1958 - CECE document 2 - pseudo-code Manual
-* 1959 - MKII document 4 - about elementary functions
-* 2008 - MMIF slides by Sandra Mols
-* 2010 - Account on the Machine by Pierre-Jacques Courtoy
+* 1958 - CECE document 2 - pseudo-code Manual (in English)
+* 1959 - MKII document 4 - about elementary functions (in French)
+* 2008 - MMIF slides by Sandra Mols (in English)
+* 2010 - Account on the Machine by Pierre-Jacques Courtoy (in English)
 * 2010 - MMIF Book by Marie Gevers (in French)
 * 2014 - MMIF summary paper by Marie Gevers (in Engligh)

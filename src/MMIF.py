@@ -77,6 +77,8 @@ class Machine:
         regs["H"] = 0
         regs["I"] = 0
         regs["J"] = 0
+        regs["S"] = 0
+        regs["V"] = 0
         # TODO more regs
         return regs
 
@@ -100,7 +102,7 @@ class Machine:
         return self.REGS[reg]
 
     def get_i_reg(self, reg: str) -> int:
-        if reg not in ("G", "H", "I", "J"):
+        if reg not in ("G", "H", "I", "J", "S", "V"):
             raise ValueError(f"Not an index register: {reg}")
         return self.REGS[reg]
 
@@ -111,12 +113,22 @@ class Machine:
         copy.set_from_string(Tetrad.decode_tetrad(val.content))
         self.REGS[reg] = copy
 
+    def set_i_reg(self, reg: str, v: int):
+        if reg not in ("G", "H", "I", "J", "S", "V"):
+            raise ValueError(f"Not an index register: {reg}")
+        if v<0 or v>9999:
+            raise ValueError(f"Bad index: {v}")
+        self.REGS[reg] = v
+
     def reset_f_reg(self, reg: str, sgn=+1):
         if reg not in ("w", "E", "F"):
             raise ValueError(f"Not a float register: {reg}")
         if sgn == 0:
             raise ValueError(f"Bad sign for reset")
         self.REGS[reg].set_from_man_exp(sgn, "000000000000000", +1, "00")
+
+    def reset_i_reg(self, reg: str, sgn=+1):
+        self.set_i_reg(reg, 0)
 
     @classmethod
     def parse(cls, text: str) -> List[Tuple[int, str,str]]:

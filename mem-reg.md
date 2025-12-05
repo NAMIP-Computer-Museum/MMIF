@@ -15,6 +15,9 @@ Drums are similar and are organised as follows:
 * an address store 1 Word which is composed of 18 digits, representing either 
    * one floating number: see [encoding.md]
    * two instructions, each coded composed of 9 digits: see [instructions.md]
+* total memory per drum is: 2000 Words 
+   * this represents 2000 x 9 = 19.000 "equivalent" bytes
+   * assuming a bytes captures 2 decimal digits (binary encoding would be more effective)
 * physical representation: see [encocoding.md]
 * mean access time: 7 ms
 

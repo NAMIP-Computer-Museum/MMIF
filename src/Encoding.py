@@ -190,6 +190,9 @@ class Float(Word):
 
         self.set_from_man_exp(s_man, man, s_exp, exp)
 
+    def get_accent(self):
+        return int(Tetrad.decode_tetrad(self.content[1:5]))
+
     def alter(self, alt: str):
         if alt is None:
             return
@@ -494,6 +497,12 @@ class Instruction(Word):
         print(f"w: {nw} E:{ne} F:{nf}")
         print(f"{m.pc:<5}{oc:<6}{mne:<8}{s_ad:<5}")
 
+        # config
+        if oc.startswith("9"):
+            if oc=="90000":
+                if i_ad==6: # TODO normal configuration - this is our default but need to adapt
+                    return
+
         # jumps and stop points
         if oc.startswith("4"):
             if oc=="40000":
@@ -598,6 +607,31 @@ class Instruction(Word):
                 m.drum_p.write(i_ad, copy)
                 m.reset_f_reg("w")
                 return
+
+
+        # tape operations
+        if oc.startswith("5"):
+            if oc=="50000":
+                raise NotImplemented("A->prn")
+            elif oc=="53000":
+                raise NotImplemented("A->C")
+            elif oc=="54000":
+                raise NotImplemented("A->drum")
+            elif oc=="55000":
+                raise NotImplemented("B->prn")
+            elif oc=="5800":
+                raise NotImplemented("B->C")
+            elif oc=="54000":
+                raise NotImplemented("B->drum")
+            elif oc=="52100":
+                raise NotImplemented("A->E")
+            elif oc=="52000":
+                print("TODO A->F") # TODO
+                return
+            elif oc=="57100":
+                raise NotImplemented("B->E")
+            elif oc=="57000":
+                raise NotImplemented("B->F")
 
         raise ValueError(f"Instruction {oc} not yet supported")
 

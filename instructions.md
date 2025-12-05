@@ -36,20 +36,25 @@
 * 85: *- (use b register, set by previous x multiplication)
 
 ## Operation on immediate value as second operand  
-* prefix 3
+* prefix 03
 * interpret the 4 digit address as number for an arithmetic operation
 * number is interpreted as 0.AAAA
 * same semantics as above for E and F
 
 ## Operation from specified memory location as second operand
-* prefix 40
+* prefix 04
 * address is used to retrieve floating point used in operation
 * same semantics as above for E and F
 
+## Operation to set index registers
+* prefix 06
+* (digit 3)-5 is index, ie. G=5, H=6, I=7, J=8
+* 46 will reset w and 96 will maintain it as usual
+
 ## Writing w to specified  address
 * prefix 090
-* next digit: 46 for writing and keeping value
-* next digit: 96 for writing and resetting value (to check: O+ ?)
+* next digits: 46 for writing and keeping value
+* next digits: 96 for writing and resetting value (to check: O+ ?)
 
 ## Jumps, End, Alarms
 * prefix 4
@@ -57,3 +62,6 @@
 * 41000 conditional jump to address depending on ch
 * 42000 normal program end
 * 47000 end with alarm
+
+## Input/Outputs
+* prefix 5
