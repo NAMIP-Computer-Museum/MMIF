@@ -1,6 +1,9 @@
-from typing import List
+from typing import List, TYPE_CHECKING
 from pprint import pprint
 import math
+
+if TYPE_CHECKING:
+    from MMIF import Machine
 
 class Tetrad:
     """
@@ -193,6 +196,12 @@ class Float(Word):
     def get_accent(self):
         return int(Tetrad.decode_tetrad(self.content[1:5]))
 
+    def set_accent(self, i: int):
+        if not(0<=i<=9999):
+            raise ValueError(f"Bad index {i}")
+        si = f"{i:04d}"
+        self.content[1:5]= Tetrad.encode_string(si)
+
     def alter(self, alt: str):
         if alt is None:
             return
@@ -209,7 +218,7 @@ class Float(Word):
             self.set_from_man_exp(+sgn, "100000000000000", +1, "01")
         elif alt == "32": # +mod
             self.set_m_sign(+1)
-        elif alt == "32": # -mod
+        elif alt == "82": # -mod
             self.set_m_sign(-1)
         elif alt == "72": # -sgn
             sgn = self.get_m_sign()
@@ -284,28 +293,28 @@ class Instruction(Word):
         "exno": "00023",
 
         #inscriptions
-        "->":  "09096",
-        "=":   "09046",
+        "->a":  "09096",
+        "=a":   "09046",
         "->E": "07196",
         "=E":  "07146",
         "->F": "07096",
         "=F":  "07046",
 
         #registre d'indice
-        "+wc=G": "06646",
-        "+wc=H": "06746",
-        "+wc=I": "06846",
-        "+wc=J": "06946",
+        "a+wc=G": "06646",
+        "a+wc=H": "06746",
+        "a+wc=I": "06846",
+        "a+wc=J": "06946",
 
-        "+wc->G": "06696",
-        "+wc->H": "06796",
-        "+wc->I": "06896",
-        "+wc->J": "06996",
+        "a+wc->G": "06696",
+        "a+wc->H": "06796",
+        "a+wc->I": "06896",
+        "a+wc->J": "06996",
 
-        "=G":  "06600",
-        "=H":  "06700",
-        "=I":  "06800",
-        "=J":  "06900",
+        "a=G":  "06600",
+        "a=H":  "06700",
+        "a=I":  "06800",
+        "a=J":  "06900",
 
         "+M=G": "01600",
         "+M=H": "01700",
@@ -324,7 +333,7 @@ class Instruction(Word):
         "-(H)":  "09246",
         "rv(H)": "40200",
         "rvV=S": "43000",  # a clarifier
-        "rvVft": "48000",  # a clarifier
+        "rv-Vft": "48000",  # a clarifier
         "rv-K":  "41400",  # back for routine with cond ?
 
          # transfert
@@ -482,7 +491,7 @@ class Instruction(Word):
         print(f"a: {fa}  b:{fb}  res:{res.get_float()}")
         return res
 
-    def execute(self, pi: int, m:"Machine"):
+    def execute(self, pi: int, m:"Machine"):  # deferred here
         oc = self.get_opcode(pi)
         ad = self.get_address(pi)
 
@@ -497,6 +506,9 @@ class Instruction(Word):
         print(f"w: {nw} E:{ne} F:{nf}")
         print(f"{m.pc:<5}{oc:<6}{mne:<8}{s_ad:<5}")
 
+        if oc.startswith("00000"): # noop
+            return
+
         # config
         if oc.startswith("9"):
             if oc=="90000":
@@ -508,8 +520,8 @@ class Instruction(Word):
             if oc=="40000":
                 m.pc = int(ad)
                 return
-            if oc=="41000" and m.ch:
-                m.pc = int(ad)
+            if oc=="41000":
+                if m.ch: m.pc = int(ad)
                 return
             if oc=="41400":
                 m.running = False # TODO used here for testing routine
@@ -521,6 +533,11 @@ class Instruction(Word):
                 m.running = False
                 m.alarm = True
                 return
+            if oc=="48000":
+                rv = m.get_i_reg("V")
+                if True:                # TODO adresse fin de tranche ??
+                    m.pc = int(ad)
+                    return
 
         # comparison (for jump)
         if oc == "07446":  # =ch
@@ -565,6 +582,19 @@ class Instruction(Word):
             m.set_f_reg("w",w)
             return
 
+        # operation on V
+        if oc.startswith("025"):
+            op = oc[3:5]
+            if op in ["66","76"]:  # TODO we assume only +* and -* meaningful
+                val = Float()
+                val.set_accent(m.get_i_reg("V"))
+                val.alter(m.alt)
+                m.alt = None
+                w = m.get_f_reg("w")
+                w = Instruction.compute(op, w, val)
+                m.set_f_reg("w",w)
+                return
+
         # operation with memory
         if oc.startswith("04"):
             idx = int(oc[2])
@@ -579,6 +609,45 @@ class Instruction(Word):
             m.set_f_reg("w",w)
             return
 
+        # index initialisations
+        if oc.startswith("01"):
+            idx = int(oc[2])
+            op  = oc[3:5]
+            if op=="00":
+                v =  m.get_f_reg("w") + i_ad  # address used as value here
+                m.set_Zi_reg(idx, v)
+                m.reset_f_reg("w")          # TODO check if reset but mnemonic is =
+                return
+
+        if oc.startswith("06"):
+            idx = int(oc[2])
+            op  = oc[3:5]
+            wc = m.get_f_reg("w").get_accent()
+            if 1<=idx<=4:
+                v = m.get_Zi_reg(idx) + wc
+                if op=="46":
+                    m.set_Zi_reg(idx,v)
+                    m.reset_f_reg("w")
+                    return
+                if op=="96":
+                    m.set_Zi_reg(idx,v)
+                    return
+            if 6<=idx<=9:
+                idx = idx-5
+                v = m.get_Zi_reg(idx) +i_ad  # address used as value here
+                if op=="46":
+                    m.set_Zi_reg(idx,v)
+                    m.reset_f_reg("w")
+                    return
+                if op=="96":
+                    m.set_Zi_reg(idx,v)
+                    return
+                if op=="00":
+                    m.set_Zi_reg(idx,i_ad)    # address used as value here
+                    m.reset_f_reg("w")      # TODO check is reset but mnemonic is =
+                    return
+
+        # initialisation E and F
         if oc.startswith("070") or oc.startswith("071"):
             reg = "F"
             if oc[2]=="1": reg = "E"
@@ -608,8 +677,7 @@ class Instruction(Word):
                 m.reset_f_reg("w")
                 return
 
-
-        # tape operations
+        # tape transfer
         if oc.startswith("5"):
             if oc=="50000":
                 raise NotImplemented("A->prn")
@@ -632,6 +700,10 @@ class Instruction(Word):
                 raise NotImplemented("B->E")
             elif oc=="57000":
                 raise NotImplemented("B->F")
+
+        # tape unroll
+        if oc.startswith("9"):
+            print("Tape transfer not yet implemented")
 
         raise ValueError(f"Instruction {oc} not yet supported")
 

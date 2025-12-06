@@ -1,8 +1,11 @@
 # MMIF instructions
 
+Technical note:
+* greak letters are transformed in latin low-case, e.g. omega->w, alpha->a
+* some mnemonic are translated i french, e.g. fin.alarme->end.alarm (end.al for short)
+
 ## Global format : 5 decimal digits
-* 1: operation type, transfert, computation, alteration,...
-* 2: 
+* 1+2: operation type, transfert, computation, alteration,...
 * 3: used as index for many operations, will involve index Wi, e.g in address translation
 * 4+5: operation dependent, e.g. operation type for computations, alteration kind,...
 
@@ -65,3 +68,6 @@
 
 ## Input/Outputs
 * prefix 5
+
+## Tape control
+* prefix 9

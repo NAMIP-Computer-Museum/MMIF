@@ -106,6 +106,19 @@ class Machine:
             raise ValueError(f"Not an index register: {reg}")
         return self.REGS[reg]
 
+    def get_Zi_reg(self, i: int):
+        if not (1 <= i <= 4):
+            raise ValueError(f"Bad index {i}")
+
+        if i == 1:
+            return self.get_i_reg("G")
+        elif i == 2:
+            return self.get_i_reg("H")
+        elif i == 3:
+            return self.get_i_reg("I")
+        elif i == 4:
+            return self.get_i_reg("J")
+
     def set_f_reg(self, reg:str, val:Float):
         if reg not in ("w", "E", "F"):
             raise ValueError(f"Not a float register: {reg}")
@@ -120,6 +133,15 @@ class Machine:
             raise ValueError(f"Bad index: {v}")
         self.REGS[reg] = v
 
+    def set_Zi_reg(self, i: int, v: int):
+        if not(1<=i<=4):
+            raise ValueError(f"Bad index {i}")
+
+        if i==1: self.set_i_reg("G",v)
+        elif i==2: self.set_i_reg("H",v)
+        elif i==3: self.set_i_reg("I",v)
+        elif i==4: self.set_i_reg("J",v)
+
     def reset_f_reg(self, reg: str, sgn=+1):
         if reg not in ("w", "E", "F"):
             raise ValueError(f"Not a float register: {reg}")
@@ -129,6 +151,8 @@ class Machine:
 
     def reset_i_reg(self, reg: str, sgn=+1):
         self.set_i_reg(reg, 0)
+
+    # TODO reset Zi ?
 
     @classmethod
     def parse(cls, text: str) -> List[Tuple[int, str,str]]:
