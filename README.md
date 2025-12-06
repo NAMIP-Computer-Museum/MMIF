@@ -60,9 +60,10 @@ Not yet supported:
 * breakpoint need to be set using "m.set_breakpoint(XXXX)" where XXXX is address, multiple of 5
 * when hitting a break point hit return in console to continue in stepping mode, type r+return to stop stepping
 
-### Example: inverse function
+### Example: inverse function, tape utils and more
 
 some material is available in this [examples directory](examples)
+for each example, we typically provide
 * code dump (picture from manual)
 * documented assembly
 * disassembly from simulator
