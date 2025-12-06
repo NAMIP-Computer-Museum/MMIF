@@ -62,7 +62,7 @@ Not yet supported:
 
 ### Example: inverse function
 
-some material is available in this [example directory](examples/inverse)
+some material is available in this [examples directory](examples)
 * code dump (picture from manual)
 * documented assembly
 * disassembly from simulator
