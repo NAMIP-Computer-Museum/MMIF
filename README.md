@@ -33,7 +33,7 @@ Note those documents are hosted here but also available on [archive.org](https:/
 
 ## Pictures and model
 
-Some historical pictures are available in the [pictures] directory including
+Some historical pictures are available in the [pictures](pictures) directory including
 * view of the machines
 * view of people in front of the machine: team, official visit of the King of Belgium
 * more to come (e.g. from press releases)
