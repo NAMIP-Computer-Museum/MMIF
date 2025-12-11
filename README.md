@@ -31,6 +31,15 @@ The repository gathers the following types of documents in the [docs](docs) dire
 
 Note those documents are hosted here but also available on [archive.org](https://archive.org/details/mmif-tech-doc)
 
+## Pictures and model
+
+Some historical pictures are available in the [pictures] directory including
+* view of the machines
+* view of people in front of the machine: team, official visit of the King of Belgium
+* more to come (e.g. from press releases)
+
+A 3D modelling of the machine (base on those historical pictures) is in progress.
+
 ## More technical details
 
 * [Memory and Registers](mem-reg.md)
